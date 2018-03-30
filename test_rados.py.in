@@ -894,6 +894,36 @@ class TestIoctx(object):
         eq([("key2", "val2")], self.ioctx.application_metadata_list("app1"))
 {% endif %}
 
+    def test_alignment(self):
+        eq(self.ioctx.alignment(), None)
+
+class TestIoctxEc(object):
+
+    def setUp(self):
+        self.rados = Rados(conffile='')
+        self.rados.connect()
+        # create ec pool with profile created above
+        import subprocess
+        subprocess.call("ceph osd pool create test_pool_ec 16 erasure default", 
+                        shell=True)
+        # I'm not sure why what's below does not work
+        # cmd = {'prefix': 'osd pool create', 'pg_num': 16, 
+        #        'pool': 'test_pool_ec', 'erasure_code_profile': 'default'}
+        # ret, buf, out = self.rados.mon_command(json.dumps(cmd), b'', timeout=30)
+        # eq(ret, 0, msg=out)
+        assert self.rados.pool_exists('test_pool_ec')
+        self.ioctx = self.rados.open_ioctx('test_pool_ec')
+
+    def tearDown(self):
+        cmd = {"prefix":"osd unset", "key":"noup"}
+        self.rados.mon_command(json.dumps(cmd), b'')
+        self.ioctx.close()
+        self.rados.delete_pool('test_pool_ec')
+        self.rados.shutdown()
+    
+    def test_alignment(self):
+        eq(self.ioctx.alignment(), 4096)
+
 class TestObject(object):
 
     def setUp(self):
