@@ -3759,11 +3759,11 @@ returned %d, but should return zero on success." % (self.name, ret))
 
     def alignment(self):
         """
-        Returns required alignment required for EC writes
+        Returns pool alignment 
 
         :returns: 
-            The number of bytes for alignment is required by the current pool,
-            -1 otherwise.
+            Number of alignment bytes required by the current pool, or -1 if 
+            alignment is not required.
         """
         cdef:
             int requires = 0 
